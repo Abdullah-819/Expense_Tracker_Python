@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1>Welcome to Expense Tracker</h1>
+    <p>Track your daily expenses and manage your budget easily!</p>
+    <a href="{{ url_for('signup') }}" class="btn btn-primary">Get Started</a>
+</div>
+{% endblock %}

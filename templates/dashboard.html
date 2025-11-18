@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center bg-light mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Expenses</h5>
+                <p class="card-text fs-3">${{ total }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <canvas id="categoryChart"></canvas>
+    </div>
+</div>
+
+<script>
+var categories = {{ categories|safe }}; // categories is a JSON string from Python
+var ctx = document.getElementById('categoryChart').getContext('2d');
+var categoryChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: Object.keys(categories),
+        datasets: [{
+            label: 'Expenses by Category',
+            data: Object.values(categories),
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+</script>
+
+{% endblock %}
