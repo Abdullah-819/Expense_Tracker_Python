@@ -1,29 +1,42 @@
-from flask import jsonify
-import json
+from flask import Flask, render_template, redirect, url_for, request, session
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from config import Config
+from datetime import datetime
 
-@app.route("/dashboard")
-def dashboard():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
+# ✅ Create Flask app
+app = Flask(__name__)
+app.config.from_object(Config)
 
-    user_id = session["user_id"]
-    expenses = Expense.query.filter_by(user_id=user_id).all()
+# ✅ Create database object
+db = SQLAlchemy(app)
 
-    total = sum(e.amount for e in expenses)
+# ---------------------- MODELS ---------------------- #
 
-    # Categories for chart
-    categories = {}
-    for e in expenses:
-        if e.category in categories:
-            categories[e.category] += e.amount
-        else:
-            categories[e.category] = e.amount
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
-    # Ensure at least some data exists to avoid empty JS error
-    if not categories:
-        categories = {"No Data": 0}
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    note = db.Column(db.String(200))
+    date = db.Column(db.String(20), default=datetime.now().strftime("%Y-%m-%d"))
 
-    return render_template("dashboard.html",
-                           expenses=expenses,
-                           total=total,
-                           categories=json.dumps(categories))
+# ---------------------- ROUTES ---------------------- #
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# (other routes follow here...)
+
+# ---------------------- RUN ---------------------- #
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
