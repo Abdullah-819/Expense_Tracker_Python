@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite database
+database/db.sqlite3
+
+# Environment / virtual environment
+env/
+venv/
+*.env
+
+# Flask instance folder (if any)
+instance/
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# MacOS / Linux files
+.DS_Store
+*.swp
+
+# Logs
+*.log
+
+# Python egg / distribution files
+*.egg
+*.egg-info/
+dist/
+build/
