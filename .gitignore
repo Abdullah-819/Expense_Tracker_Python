@@ -35,3 +35,6 @@ build/
 
 #Enviromental variable 
 .env
+/database/db.sqlite3
+__pycache__/
+*.pyc
