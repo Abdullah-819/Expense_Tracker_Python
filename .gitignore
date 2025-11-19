@@ -32,3 +32,6 @@ instance/
 *.egg-info/
 dist/
 build/
+
+#Enviromental variable 
+.env

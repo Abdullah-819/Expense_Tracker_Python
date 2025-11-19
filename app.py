@@ -1,13 +1,14 @@
+import os
+import uuid
+import json
+from datetime import datetime, date
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import Config
-from datetime import datetime, date
-import json
-import os
-import uuid
 from flask_mail import Mail, Message
+from config import Config
 
+# ------------------- App Initialization -------------------
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -30,6 +31,16 @@ class Expense(db.Model):
     category = db.Column(db.String(100), nullable=False)
     note = db.Column(db.String(200))
     date = db.Column(db.Date, default=date.today)
+
+# ------------------- Helper Function for Emails -------------------
+def send_email(subject, recipient, body):
+    """Reusable function to send emails via Flask-Mail"""
+    try:
+        msg = Message(subject, sender=app.config['MAIL_USERNAME'], recipients=[recipient])
+        msg.body = body
+        mail.send(msg)
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 # ------------------- Routes -------------------
 @app.route('/')
@@ -56,13 +67,8 @@ def signup():
 
         # Send verification email
         verification_link = url_for('verify_email', token=token, _external=True)
-        msg = Message(
-            "Confirm your Expense Tracker account",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[email]
-        )
-        msg.body = f"Hi {username},\n\nPlease confirm your account by clicking this link:\n{verification_link}"
-        mail.send(msg)
+        body = f"Hi {username},\n\nPlease confirm your account by clicking this link:\n{verification_link}"
+        send_email("Confirm your Expense Tracker account", email, body)
 
         flash("Signup successful! Please check your email to verify your account.", "success")
         return redirect(url_for('login'))
@@ -85,16 +91,26 @@ def login():
         username = request.form['username'].strip()
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password, password):
             if not user.is_verified:
                 flash("Please verify your email before logging in.", "warning")
                 return redirect(url_for('login'))
+
+            # Set session
             session['user_id'] = user.id
             session['username'] = user.username
             flash('Logged in successfully.', 'success')
+
+            # Send Login Notification Email
+            body = f"Hi {user.username},\n\nYou just logged in to your Expense Tracker account on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
+            send_email("New Login Alert", user.email, body)
+
             return redirect(url_for('dashboard'))
+
         flash('Invalid credentials!', 'danger')
         return redirect(url_for('login'))
+
     return render_template('login.html')
 
 # ---------- LOGOUT ----------
@@ -114,28 +130,28 @@ def dashboard():
     total = sum(e.amount for e in expenses)
     categories = {}
     for e in expenses:
-        categories[e.category] = categories.get(e.category,0)+e.amount
+        categories[e.category] = categories.get(e.category, 0) + e.amount
     if not categories:
-        categories = {'No Data':0}
+        categories = {'No Data': 0}
     return render_template('dashboard.html', expenses=expenses, total=total, categories=json.dumps(categories))
 
 # ---------- ADD EXPENSE ----------
-@app.route('/add-expense', methods=['GET','POST'])
+@app.route('/add-expense', methods=['GET', 'POST'])
 def add_expense():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if request.method=='POST':
+    if request.method == 'POST':
         try:
             amount = float(request.form['amount'])
         except ValueError:
             flash('Please enter a valid amount.', 'danger')
             return redirect(url_for('add_expense'))
-        category = request.form.get('category','Other')
-        note = request.form.get('note','')
-        date_str = request.form.get('date','')
+        category = request.form.get('category', 'Other')
+        note = request.form.get('note', '')
+        date_str = request.form.get('date', '')
         if date_str:
             try:
-                expense_date = datetime.strptime(date_str,'%Y-%m-%d').date()
+                expense_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date format.', 'danger')
                 return redirect(url_for('add_expense'))
@@ -158,7 +174,7 @@ def expenses():
     return render_template('expenses.html', expenses=expenses)
 
 # ---------- EDIT EXPENSE ----------
-@app.route('/edit-expense/<int:expense_id>', methods=['GET','POST'])
+@app.route('/edit-expense/<int:expense_id>', methods=['GET', 'POST'])
 def edit_expense(expense_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
@@ -166,17 +182,17 @@ def edit_expense(expense_id):
     if expense.user_id != session['user_id']:
         flash('Not authorized to edit.', 'danger')
         return redirect(url_for('expenses'))
-    if request.method=='POST':
+    if request.method == 'POST':
         try:
             expense.amount = float(request.form['amount'])
         except ValueError:
             flash('Invalid amount.', 'danger')
             return redirect(url_for('edit_expense', expense_id=expense.id))
         expense.category = request.form['category']
-        expense.note = request.form.get('note','')
+        expense.note = request.form.get('note', '')
         date_str = request.form.get('date')
         if date_str:
-            expense.date = datetime.strptime(date_str,'%Y-%m-%d').date()
+            expense.date = datetime.strptime(date_str, '%Y-%m-%d').date()
         db.session.commit()
         flash('Expense updated.', 'success')
         return redirect(url_for('expenses'))
@@ -196,8 +212,8 @@ def delete_expense(expense_id):
     flash('Expense deleted successfully.', 'success')
     return redirect(url_for('expenses'))
 
-# ---------- RUN APP ----------
-if __name__=='__main__':
+# ------------------- RUN APP -------------------
+if __name__ == '__main__':
     if not os.path.exists('database'):
         os.makedirs('database')
     with app.app_context():
