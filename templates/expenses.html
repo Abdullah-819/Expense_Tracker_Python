@@ -16,8 +16,8 @@
     <tbody>
         {% for expense in expenses %}
         <tr>
-            <td>{{ expense.date }}</td>
-            <td>{{ expense.amount }}</td>
+            <td>{{ expense.date.strftime('%Y-%m-%d') if expense.date else '' }}</td>
+            <td>{{ '%.2f'|format(expense.amount) }}</td>
             <td>{{ expense.category }}</td>
             <td>{{ expense.note }}</td>
         </tr>

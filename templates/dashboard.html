@@ -10,7 +10,7 @@
         <div class="card text-center bg-light mb-3">
             <div class="card-body">
                 <h5 class="card-title">Total Expenses</h5>
-                <p class="card-text fs-3">${{ total }}</p>
+                <p class="card-text fs-3">${{ '%.2f'|format(total) }}</p>
             </div>
         </div>
     </div>
@@ -32,14 +32,6 @@ var categoryChart = new Chart(ctx, {
         datasets: [{
             label: 'Expenses by Category',
             data: Object.values(categories),
-            backgroundColor: [
-                'rgba(54, 162, 235, 0.7)',
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(255, 206, 86, 0.7)',
-                'rgba(75, 192, 192, 0.7)',
-                'rgba(153, 102, 255, 0.7)',
-                'rgba(255, 159, 64, 0.7)'
-            ],
             borderWidth: 1
         }]
     },
