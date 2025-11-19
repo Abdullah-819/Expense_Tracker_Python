@@ -83,7 +83,7 @@ def signup():
         db.session.add(user)
         db.session.commit()  # commit before sending email
 
-        verification_link = url_for('verify_email', token=token, _external=True)
+        verification_link = f"{Config.BASE_URL}/verify-email/{token}"
         body = f"Hi {username},\n\nPlease confirm your account by clicking the link below:\n{verification_link}"
         send_email("Confirm your Expense Tracker account", email, body)
 
@@ -127,7 +127,7 @@ def resend_verification():
         user.verification_token = token
         db.session.commit()
 
-        verification_link = url_for('verify_email', token=token, _external=True)
+        verification_link = f"{Config.BASE_URL}/verify-email/{token}"
         body = f"Hi {user.username},\n\nPlease confirm your account by clicking the link below:\n{verification_link}"
         send_email("Resend: Confirm your Expense Tracker account", email, body)
         flash("Verification email resent! Check your inbox.", "success")
@@ -185,6 +185,16 @@ def dashboard():
         categories = {'No Data': 0}
 
     return render_template('dashboard.html', expenses=expenses, total=total, categories=json.dumps(categories))
+
+# ---------- VIEW EXPENSES ----------
+@app.route('/expenses')
+def expenses():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    expenses = Expense.query.filter_by(user_id=user_id).order_by(Expense.date.desc()).all()
+    return render_template('expenses.html', expenses=expenses)
 
 # ---------- ADD EXPENSE ----------
 @app.route('/add-expense', methods=['GET', 'POST'])
