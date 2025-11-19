@@ -49,6 +49,23 @@ def signup():
         return redirect(url_for("login"))
     return render_template("signup.html")
 
+@app.route("/delete-expense/<int:expense_id>", methods=["POST"])
+def delete_expense(expense_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    
+    expense = Expense.query.get_or_404(expense_id)
+    
+    if expense.user_id != session["user_id"]:
+        flash("You are not authorized to delete this expense.", "danger")
+        return redirect(url_for("expenses"))
+    
+    db.session.delete(expense)
+    db.session.commit()
+    flash("Expense deleted successfully.", "success")
+    return redirect(url_for("expenses"))
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -138,3 +155,51 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+
+# DELETE EXPENSE
+@app.route("/delete-expense/<int:expense_id>", methods=["POST"])
+def delete_expense(expense_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    expense = Expense.query.get_or_404(expense_id)
+
+    if expense.user_id != session["user_id"]:
+        flash("You are not authorized to delete this expense.", "danger")
+        return redirect(url_for("expenses"))
+
+    db.session.delete(expense)
+    db.session.commit()
+    flash("Expense deleted successfully.", "success")
+    return redirect(url_for("expenses"))
+
+# EDIT EXPENSE
+@app.route("/edit-expense/<int:expense_id>", methods=["GET", "POST"])
+def edit_expense(expense_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    expense = Expense.query.get_or_404(expense_id)
+    if expense.user_id != session["user_id"]:
+        flash("You are not authorized to edit this expense.", "danger")
+        return redirect(url_for("expenses"))
+
+    if request.method == "POST":
+        try:
+            expense.amount = float(request.form["amount"])
+        except ValueError:
+            flash("Invalid amount entered.", "danger")
+            return redirect(url_for("edit_expense", expense_id=expense.id))
+        
+        expense.category = request.form["category"]
+        expense.note = request.form.get("note", "")
+        date_str = request.form.get("date")
+        if date_str:
+            expense.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        
+        db.session.commit()
+        flash("Expense updated successfully.", "success")
+        return redirect(url_for("expenses"))
+
+    return render_template("edit_expense.html", expense=expense)

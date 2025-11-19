@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Expenses{% endblock %}
+
+{% block content %}
+<h2>All Expenses</h2>
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Amount ($)</th>
+            <th>Category</th>
+            <th>Note</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+        <tr>
+            <td>{{ expense.date.strftime('%Y-%m-%d') if expense.date else '' }}</td>
+            <td>{{ '%.2f'|format(expense.amount) }}</td>
+            <td>{{ expense.category }}</td>
+            <td>{{ expense.note }}</td>
+            <td>
+                <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                <form action="{{ url_for('delete_expense', expense_id=expense.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
