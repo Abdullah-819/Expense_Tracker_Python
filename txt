@@ -1,0 +1,14 @@
+erd diagram 
+maping of the erd diagram 
+
+dowcumentation 
+vuva 
+30 marks of the remianing project \
+
+
+
+it will be doen into the kast two labs 
+
+
+basic functions:
+update, search, add 
