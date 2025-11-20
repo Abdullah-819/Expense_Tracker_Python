@@ -28,7 +28,7 @@ This app allows users to manage expenses, view analytics, receive login alerts, 
 ---
 
 ## 📸 Screenshots
-(Add screenshots here after deploying the project)
+TBC
 
 ---
 
@@ -50,3 +50,4 @@ This app allows users to manage expenses, view analytics, receive login alerts, 
 ```bash
 git clone https://github.com/your-username/expense-tracker.git
 cd expense-tracker
+
